@@ -36,6 +36,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Dev auto-login
+    |--------------------------------------------------------------------------
+    | In NON-PRODUCTION environments only, auto-authenticate as the user with
+    | this GitHub login so the dashboard can be accessed without the OAuth
+    | flow. Leave empty to disable. Ignored entirely in production.
+    */
+    'dev_login' => env('COPILOT_DEV_LOGIN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Sync schedule
     |--------------------------------------------------------------------------
     | Time (H:i, UTC) at which the daily sync runs.
