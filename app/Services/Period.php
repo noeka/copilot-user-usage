@@ -38,27 +38,21 @@ enum Period: string
         };
     }
 
-    /** Chart bucket granularity for this period. */
-    public function bucketFormat(): string
+    /** Sortable group key for time-series bucketing (DB-agnostic, computed in PHP). */
+    public function bucketKey(CarbonInterface $date): string
     {
         return match ($this) {
-            self::Day   => 'H:00',
-            self::Week  => 'D d',
-            self::Month => 'M j',
-            self::Year  => 'M Y',
-            self::All   => 'M Y',
+            self::Year, self::All => $date->format('Y-m'),
+            default               => $date->format('Y-m-d'),
         };
     }
 
-    /** SQL date_trunc / strftime bucket for grouping. */
-    public function sqlBucket(): string
+    /** Human-friendly label for a bucket. */
+    public function bucketLabel(CarbonInterface $date): string
     {
         return match ($this) {
-            self::Day   => '%Y-%m-%d',
-            self::Week  => '%Y-%W',
-            self::Month => '%Y-%m',
-            self::Year  => '%Y-%m',
-            self::All   => '%Y-%m',
+            self::Year, self::All => $date->format('M Y'),
+            default               => $date->format('M j'),
         };
     }
 

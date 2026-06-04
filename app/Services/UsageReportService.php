@@ -62,25 +62,34 @@ class UsageReportService
             $query->where('copilot_user_id', $user->id);
         }
 
-        $bucket = $period->sqlBucket();
-
         $rows = $query
-            ->selectRaw("strftime('{$bucket}', usage_date) as bucket,
-                         SUM(code_suggestions)  as suggestions,
-                         SUM(code_acceptances)  as acceptances,
-                         SUM(lines_accepted)    as lines_accepted,
-                         SUM(chat_interactions) as chat")
-            ->groupBy('bucket')
-            ->orderBy('bucket')
-            ->get();
+            ->orderBy('usage_date')
+            ->get(['usage_date', 'code_suggestions', 'code_acceptances', 'lines_accepted', 'chat_interactions']);
 
-        return $rows->map(fn ($r) => [
-            'label'        => $r->bucket,
-            'suggestions'  => (int) $r->suggestions,
-            'acceptances'  => (int) $r->acceptances,
-            'lines_accepted' => (int) $r->lines_accepted,
-            'chat'         => (int) $r->chat,
-        ])->toArray();
+        // Bucket in PHP so this works on any database (MySQL/Postgres/SQLite).
+        $buckets = [];
+        foreach ($rows as $row) {
+            $key = $period->bucketKey($row->usage_date);
+
+            if (! isset($buckets[$key])) {
+                $buckets[$key] = [
+                    'label'          => $period->bucketLabel($row->usage_date),
+                    'suggestions'    => 0,
+                    'acceptances'    => 0,
+                    'lines_accepted' => 0,
+                    'chat'           => 0,
+                ];
+            }
+
+            $buckets[$key]['suggestions']    += (int) $row->code_suggestions;
+            $buckets[$key]['acceptances']    += (int) $row->code_acceptances;
+            $buckets[$key]['lines_accepted'] += (int) $row->lines_accepted;
+            $buckets[$key]['chat']           += (int) $row->chat_interactions;
+        }
+
+        ksort($buckets);
+
+        return array_values($buckets);
     }
 
     /**
