@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\CopilotUser;
 use App\Models\DailyUsage;
 use App\Services\Github\CopilotMetricsClient;
+use App\Services\Github\UsageMetricsParser;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -16,7 +17,7 @@ class SyncCopilotUsage extends Command
 
     protected $description = 'Fetch and store GitHub Copilot per-user usage data';
 
-    public function handle(CopilotMetricsClient $client): int
+    public function handle(CopilotMetricsClient $client, UsageMetricsParser $parser): int
     {
         $days = $this->daysToSync();
 
@@ -38,7 +39,7 @@ class SyncCopilotUsage extends Command
                 }
 
                 foreach ($rows as $row) {
-                    $this->upsertRow($day, $row);
+                    $this->upsertRow($parser, $day, $row);
                 }
 
                 $synced++;
@@ -72,47 +73,31 @@ class SyncCopilotUsage extends Command
         return [Carbon::yesterday()];
     }
 
-    private function upsertRow(Carbon $day, array $row): void
+    private function upsertRow(UsageMetricsParser $parser, Carbon $day, array $row): void
     {
-        // Field names as documented (adapt if GitHub changes them)
-        $githubId    = (string) ($row['user_id'] ?? $row['id'] ?? '');
-        $githubLogin = (string) ($row['login'] ?? $row['username'] ?? '');
+        $identity = $parser->identity($row);
 
-        if ($githubId === '' && $githubLogin === '') {
+        if ($identity['github_id'] === '' && $identity['github_login'] === '') {
             return;
         }
 
         $copilotUser = CopilotUser::updateOrCreate(
-            ['github_id' => $githubId ?: $githubLogin],
+            ['github_id' => $identity['github_id'] ?: $identity['github_login']],
             [
-                'github_login' => $githubLogin ?: $githubId,
-                'name'         => $row['name'] ?? null,
-                'avatar_url'   => $row['avatar_url'] ?? null,
+                'github_login' => $identity['github_login'] ?: $identity['github_id'],
+                'name'         => $identity['name'],
+                'avatar_url'   => $identity['avatar_url'],
             ]
         );
 
-        // Extract summary fields; try multiple known field name patterns
-        $suggestions  = (int) ($row['total_code_suggestions'] ?? $row['code_suggestions'] ?? $row['suggestions'] ?? 0);
-        $acceptances  = (int) ($row['total_code_acceptances'] ?? $row['code_acceptances'] ?? $row['acceptances'] ?? 0);
-        $linesSugg    = (int) ($row['total_lines_suggested'] ?? $row['lines_suggested'] ?? 0);
-        $linesAcc     = (int) ($row['total_lines_accepted'] ?? $row['lines_accepted'] ?? 0);
-        $chat         = (int) ($row['total_chat_interactions'] ?? $row['chat_interactions'] ?? $row['chat_turns'] ?? 0);
-        $engaged      = (bool) ($row['is_engaged'] ?? $row['engaged'] ?? ($suggestions > 0 || $chat > 0));
+        $metrics = $parser->summarize($row);
 
         DailyUsage::updateOrCreate(
             [
                 'copilot_user_id' => $copilotUser->id,
                 'usage_date'      => $day->toDateString(),
             ],
-            [
-                'code_suggestions'  => $suggestions,
-                'code_acceptances'  => $acceptances,
-                'lines_suggested'   => $linesSugg,
-                'lines_accepted'    => $linesAcc,
-                'chat_interactions' => $chat,
-                'engaged'           => $engaged,
-                'raw'               => $row,
-            ]
+            $metrics + ['raw' => $row]
         );
     }
 }

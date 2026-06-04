@@ -76,6 +76,36 @@ class UsageReportServiceTest extends TestCase
         $this->assertEquals(60, $series[1]['lines_accepted']);
     }
 
+    public function test_breakdown_by_language_reads_nested_raw(): void
+    {
+        Carbon::setTestNow('2025-11-15');
+
+        $user = $this->seedUser();
+        $this->seedUsage($user, '2025-11-01', ['raw' => [
+            'copilot_ide_code_completions' => [
+                'editors' => [[
+                    'name'   => 'vscode',
+                    'models' => [[
+                        'name'      => 'default',
+                        'languages' => [
+                            ['name' => 'python', 'total_code_suggestions' => 60, 'total_code_acceptances' => 20, 'total_code_lines_suggested' => 120, 'total_code_lines_accepted' => 90],
+                            ['name' => 'php',    'total_code_suggestions' => 30, 'total_code_acceptances' => 10, 'total_code_lines_suggested' => 60,  'total_code_lines_accepted' => 40],
+                        ],
+                    ]],
+                ]],
+            ],
+        ]]);
+
+        $breakdown = $this->service->breakdown($user, 'language', Period::Month);
+
+        $this->assertCount(2, $breakdown);
+        // Ordered by lines_accepted desc: python (90) before php (40).
+        $this->assertEquals('python', $breakdown[0]['label']);
+        $this->assertEquals(90, $breakdown[0]['lines_accepted']);
+        $this->assertEquals(60, $breakdown[0]['suggestions']);
+        $this->assertEquals('php', $breakdown[1]['label']);
+    }
+
     public function test_leaderboard_orders_by_lines_accepted(): void
     {
         Carbon::setTestNow('2025-11-15');

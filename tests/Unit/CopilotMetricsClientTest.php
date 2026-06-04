@@ -22,8 +22,8 @@ class CopilotMetricsClientTest extends TestCase
         config(['copilot.org' => 'test-org']);
 
         $ndjson = implode("\n", [
-            json_encode(['user_id' => '1', 'login' => 'alice', 'total_lines_accepted' => 42, 'total_code_suggestions' => 100, 'total_code_acceptances' => 30]),
-            json_encode(['user_id' => '2', 'login' => 'bob',   'total_lines_accepted' => 10, 'total_code_suggestions' => 50,  'total_code_acceptances' => 5]),
+            json_encode(['user_id' => '1', 'user_login' => 'alice', 'copilot_ide_code_completions' => ['editors' => []]]),
+            json_encode(['user_id' => '2', 'user_login' => 'bob',   'copilot_ide_code_completions' => ['editors' => []]]),
         ]);
 
         Http::fake([
@@ -36,8 +36,8 @@ class CopilotMetricsClientTest extends TestCase
         $rows = $this->makeClient()->usersReport(now());
 
         $this->assertCount(2, $rows);
-        $this->assertEquals('alice', $rows[0]['login']);
-        $this->assertEquals('bob', $rows[1]['login']);
+        $this->assertEquals('alice', $rows[0]['user_login']);
+        $this->assertEquals('bob', $rows[1]['user_login']);
     }
 
     public function test_returns_empty_on_404(): void

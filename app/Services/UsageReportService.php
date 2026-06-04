@@ -4,10 +4,17 @@ namespace App\Services;
 
 use App\Models\CopilotUser;
 use App\Models\DailyUsage;
-use Illuminate\Support\Facades\DB;
+use App\Services\Github\UsageMetricsParser;
 
 class UsageReportService
 {
+    private UsageMetricsParser $parser;
+
+    public function __construct(?UsageMetricsParser $parser = null)
+    {
+        $this->parser = $parser ?? new UsageMetricsParser();
+    }
+
     /**
      * Aggregate summary totals for a period.
      * Pass $user = null for org-wide totals (admin only).
@@ -109,24 +116,18 @@ class UsageReportService
 
         $usages = $query->get(['raw']);
 
-        // Parse the raw NDJSON records for breakdown dimension
+        // Accumulate the nested code metrics from each raw record by dimension.
         $totals = [];
 
         foreach ($usages as $usage) {
-            $raw = $usage->raw;
-
-            // The GitHub API returns breakdowns inside the raw record.
-            // Keys tried: 'editors', 'languages', 'models', 'copilot_ide_code_completions'
-            $items = $this->extractDimensionItems($raw, $dimension);
-
-            foreach ($items as $key => $metrics) {
+            foreach ($this->parser->breakdownItems($usage->raw ?? [], $dimension) as $key => $metrics) {
                 if (! isset($totals[$key])) {
                     $totals[$key] = ['label' => $key, 'suggestions' => 0, 'acceptances' => 0, 'lines_suggested' => 0, 'lines_accepted' => 0];
                 }
-                $totals[$key]['suggestions']   += (int) ($metrics['suggestions'] ?? $metrics['total_code_suggestions'] ?? 0);
-                $totals[$key]['acceptances']   += (int) ($metrics['acceptances'] ?? $metrics['total_code_acceptances'] ?? 0);
-                $totals[$key]['lines_suggested'] += (int) ($metrics['lines_suggested'] ?? $metrics['total_lines_suggested'] ?? 0);
-                $totals[$key]['lines_accepted'] += (int) ($metrics['lines_accepted'] ?? $metrics['total_lines_accepted'] ?? 0);
+                $totals[$key]['suggestions']     += $metrics['total_code_suggestions'];
+                $totals[$key]['acceptances']     += $metrics['total_code_acceptances'];
+                $totals[$key]['lines_suggested'] += $metrics['total_code_lines_suggested'];
+                $totals[$key]['lines_accepted']  += $metrics['total_code_lines_accepted'];
             }
         }
 
@@ -168,36 +169,5 @@ class UsageReportService
                 'acceptance_rate' => $row->suggestions > 0 ? round($row->acceptances / $row->suggestions * 100, 1) : 0.0,
             ])
             ->toArray();
-    }
-
-    private function extractDimensionItems(array $raw, string $dimension): array
-    {
-        // GitHub's NDJSON per-user records nest breakdowns differently depending on API version.
-        // We try several known paths gracefully.
-        $map = [
-            'language' => ['languages', 'copilot_ide_code_completions.languages'],
-            'editor'   => ['editors', 'copilot_ide_code_completions.editors'],
-            'model'    => ['models', 'copilot_ide_code_completions.models'],
-        ];
-
-        $paths = $map[$dimension] ?? [$dimension . 's'];
-
-        foreach ($paths as $path) {
-            $value = data_get($raw, str_replace('.', '.', $path));
-            if (is_array($value) && count($value) > 0) {
-                // Array of objects with 'name' or 'language'/'editor'/'model' key
-                $result = [];
-                foreach ($value as $item) {
-                    if (! is_array($item)) {
-                        continue;
-                    }
-                    $key = $item['name'] ?? $item[$dimension] ?? $item['language'] ?? $item['editor'] ?? $item['model'] ?? 'unknown';
-                    $result[$key] = $item;
-                }
-                return $result;
-            }
-        }
-
-        return [];
     }
 }
