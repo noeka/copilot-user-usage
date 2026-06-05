@@ -100,6 +100,14 @@ class RealReportShapeTest extends TestCase
             'timeSeries' => $this->report->timeSeries($user, Period::Month),
         ];
 
+        // Summary cards lead with interactions and never headline a 0% rate,
+        // even though this user's completion acceptance rate is 0.
+        $cards = View::make('partials.summary-cards', $shared)->render();
+        $this->assertStringContainsString('Interactions', $cards);
+        $this->assertStringContainsString('Lines added', $cards);
+        $this->assertStringNotContainsString('Acceptance rate', $cards);
+        $this->assertDoesNotMatchRegularExpression('/value[^>]*>0%/', $cards);
+
         $tokens = View::make('partials.token-usage', $shared)->render();
         $this->assertStringContainsString('<svg', $tokens);
 

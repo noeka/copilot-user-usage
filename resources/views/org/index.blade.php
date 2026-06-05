@@ -16,16 +16,18 @@
         <div class="value" style="color:var(--green)">{{ $summary['active_users'] }}</div>
     </div>
     <div class="stat-card">
-        <div class="label">Lines accepted</div>
+        <div class="label">Interactions</div>
+        <div class="value" style="color:var(--purple)">{{ number_format($summary['user_initiated_interactions'] ?? $summary['chat_interactions']) }}</div>
+        <div class="sub">user-initiated requests</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Lines added</div>
         <div class="value">{{ number_format($summary['lines_accepted']) }}</div>
+        <div class="sub">{{ number_format($summary['lines_deleted'] ?? 0) }} removed</div>
     </div>
     <div class="stat-card">
-        <div class="label">Acceptance rate</div>
-        <div class="value" style="color:var(--accent)">{{ $summary['acceptance_rate'] }}%</div>
-    </div>
-    <div class="stat-card">
-        <div class="label">Chat interactions</div>
-        <div class="value" style="color:var(--purple)">{{ number_format($summary['chat_interactions']) }}</div>
+        <div class="label">Code generations</div>
+        <div class="value" style="color:var(--accent)">{{ number_format($summary['code_suggestions']) }}</div>
     </div>
 </div>
 
@@ -93,10 +95,9 @@
                 <tr>
                     <th>#</th>
                     <th>Member</th>
-                    <th>Lines accepted</th>
-                    <th>Suggestions</th>
-                    <th>Acceptance</th>
-                    <th>Chat</th>
+                    <th>Lines added</th>
+                    <th>Interactions</th>
+                    <th>Generations</th>
                     <th>Active days</th>
                     <th></th>
                 </tr>
@@ -112,13 +113,8 @@
                         {{ $row['user']?->github_login ?? '—' }}
                     </td>
                     <td><strong>{{ number_format($row['lines_accepted']) }}</strong></td>
-                    <td>{{ number_format($row['suggestions']) }}</td>
-                    <td>
-                        <span class="badge {{ $row['acceptance_rate'] >= 30 ? 'badge-green' : 'badge-blue' }}">
-                            {{ $row['acceptance_rate'] }}%
-                        </span>
-                    </td>
                     <td>{{ number_format($row['chat']) }}</td>
+                    <td>{{ number_format($row['suggestions']) }}</td>
                     <td>{{ $row['active_days'] }}</td>
                     <td>
                         @if($row['user'])
