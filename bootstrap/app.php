@@ -12,8 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(prepend: [\App\Http\Middleware\DevAutoLogin::class]);
-        $middleware->redirectGuestsTo(fn () => route('auth.github'));
+        // Appended (not prepended) so it runs after StartSession and can read the
+        // session's explicit-logout flag.
+        $middleware->web(append: [\App\Http\Middleware\DevAutoLogin::class]);
+        $middleware->redirectGuestsTo(fn () => route('login'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
