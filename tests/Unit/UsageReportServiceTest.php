@@ -76,23 +76,29 @@ class UsageReportServiceTest extends TestCase
         $this->assertEquals(60, $series[1]['lines_accepted']);
     }
 
-    public function test_breakdown_by_language_reads_nested_raw(): void
+    public function test_breakdown_by_language_reads_raw(): void
     {
         Carbon::setTestNow('2025-11-15');
 
         $user = $this->seedUser();
         $this->seedUsage($user, '2025-11-01', ['raw' => [
-            'copilot_ide_code_completions' => [
-                'editors' => [[
-                    'name'   => 'vscode',
-                    'models' => [[
-                        'name'      => 'default',
-                        'languages' => [
-                            ['name' => 'python', 'total_code_suggestions' => 60, 'total_code_acceptances' => 20, 'total_code_lines_suggested' => 120, 'total_code_lines_accepted' => 90],
-                            ['name' => 'php',    'total_code_suggestions' => 30, 'total_code_acceptances' => 10, 'total_code_lines_suggested' => 60,  'total_code_lines_accepted' => 40],
-                        ],
-                    ]],
-                ]],
+            'totals_by_language_feature' => [
+                [
+                    'language'                       => 'python',
+                    'feature'                        => 'chat_panel_custom_mode',
+                    'code_generation_activity_count' => 60,
+                    'code_acceptance_activity_count' => 20,
+                    'loc_suggested_to_add_sum'       => 120,
+                    'loc_added_sum'                  => 90,
+                ],
+                [
+                    'language'                       => 'php',
+                    'feature'                        => 'agent_edit',
+                    'code_generation_activity_count' => 30,
+                    'code_acceptance_activity_count' => 10,
+                    'loc_suggested_to_add_sum'       => 60,
+                    'loc_added_sum'                  => 40,
+                ],
             ],
         ]]);
 

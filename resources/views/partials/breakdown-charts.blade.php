@@ -1,4 +1,4 @@
-{{-- $byLanguage, $byEditor — arrays from UsageReportService::breakdown() --}}
+{{-- $byLanguage, $byEditor, $byFeature — arrays from UsageReportService::breakdown() --}}
 <div class="charts-grid">
     <div class="card">
         <div class="card-header">Top languages (lines accepted)</div>
@@ -24,6 +24,20 @@
                 {!! \Noeka\Svgraph\Chart::donut($editorData) !!}
             @else
                 <div class="empty-state"><p>No editor data yet.</p></div>
+            @endif
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">By feature (lines accepted)</div>
+        <div class="card-body chart-wrap">
+            @if(isset($byFeature) && count($byFeature) > 0)
+                @php
+                    $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
+                @endphp
+                {!! \Noeka\Svgraph\Chart::bar($featureData)->axes()->grid() !!}
+            @else
+                <div class="empty-state"><p>No feature data yet.</p></div>
             @endif
         </div>
     </div>

@@ -6,13 +6,9 @@ namespace App\Services\Github;
  * Parses a single per-user record from the GitHub Copilot "users-1-day" usage
  * metrics report (NDJSON).
  *
- * The record is nested, mirroring the documented /copilot/metrics schema: code
- * metrics live under copilot_ide_code_completions.editors[].models[].languages[]
- * and chat under copilot_ide_chat.editors[].models[]. This class flattens that
- * tree into the columns the app stores, and exposes per-dimension breakdowns.
- *
- * Field lookups keep tolerant fallbacks to older/flat key names so an
- * unexpected payload shape degrades gracefully rather than producing zeros.
+ * The record is flat: code metrics live at the top level and in totals_by_* arrays.
+ * This class flattens those into the columns the app stores and exposes per-dimension
+ * breakdowns for the dashboard charts.
  */
 class UsageMetricsParser
 {
@@ -45,36 +41,73 @@ class UsageMetricsParser
      */
     public function summarize(array $row): array
     {
-        $suggestions = 0;
-        $acceptances = 0;
-        $linesSugg   = 0;
-        $linesAcc    = 0;
+        $suggestions  = (int) ($row['code_generation_activity_count'] ?? 0);
+        $acceptances  = (int) ($row['code_acceptance_activity_count'] ?? 0);
+        $linesSugg    = (int) ($row['loc_suggested_to_add_sum'] ?? 0);
+        $linesAcc     = (int) ($row['loc_added_sum'] ?? 0);
+        $interactions = (int) ($row['user_initiated_interaction_count'] ?? 0);
 
-        foreach ($this->codeLeaves($row) as $leaf) {
-            $suggestions += $this->metric($leaf, 'total_code_suggestions', 'code_suggestions', 'suggestions');
-            $acceptances += $this->metric($leaf, 'total_code_acceptances', 'code_acceptances', 'acceptances');
-            $linesSugg   += $this->metric($leaf, 'total_code_lines_suggested', 'total_lines_suggested', 'lines_suggested');
-            $linesAcc    += $this->metric($leaf, 'total_code_lines_accepted', 'total_lines_accepted', 'lines_accepted');
-        }
-
-        $chat = 0;
-        foreach ($this->chatLeaves($row) as $leaf) {
-            $chat += $this->metric($leaf, 'total_chats', 'total_chat_interactions', 'chat_interactions');
-        }
+        $engaged = (bool) ($row['used_agent'] ?? false)
+            || (bool) ($row['used_chat'] ?? false)
+            || (bool) ($row['used_cli'] ?? false)
+            || (bool) ($row['used_copilot_coding_agent'] ?? false)
+            || (bool) ($row['used_copilot_cloud_agent'] ?? false)
+            || $suggestions > 0
+            || $interactions > 0;
 
         return [
             'code_suggestions'  => $suggestions,
             'code_acceptances'  => $acceptances,
             'lines_suggested'   => $linesSugg,
             'lines_accepted'    => $linesAcc,
-            'chat_interactions' => $chat,
-            // No per-user engagement boolean exists in the schema; derive one.
-            'engaged'           => (bool) ($row['is_engaged'] ?? $row['engaged'] ?? ($suggestions > 0 || $chat > 0)),
+            'chat_interactions' => $interactions,
+            'engaged'           => $engaged,
         ];
     }
 
     /**
-     * Accumulate code metrics grouped by a dimension (language|editor|model).
+     * Extract extended fields stored alongside the summary.
+     *
+     * @return array<string, mixed>
+     */
+    public function extras(array $row): array
+    {
+        $cli = is_array($row['totals_by_cli'] ?? null) ? $row['totals_by_cli'] : [];
+        $tokenUsage = is_array($cli['token_usage'] ?? null) ? $cli['token_usage'] : [];
+        $phase = is_array($row['ai_adoption_phase'] ?? null) ? $row['ai_adoption_phase'] : [];
+
+        return [
+            'user_initiated_interactions' => (int) ($row['user_initiated_interaction_count'] ?? 0),
+            'lines_deleted'               => (int) ($row['loc_deleted_sum'] ?? 0),
+            'loc_suggested_to_delete'     => (int) ($row['loc_suggested_to_delete_sum'] ?? 0),
+
+            'used_agent'               => (bool) ($row['used_agent'] ?? false),
+            'used_chat'                => (bool) ($row['used_chat'] ?? false),
+            'used_cli'                 => (bool) ($row['used_cli'] ?? false),
+            'used_copilot_coding_agent' => (bool) ($row['used_copilot_coding_agent'] ?? false),
+            'used_copilot_cloud_agent'  => (bool) ($row['used_copilot_cloud_agent'] ?? false),
+            'used_code_review_active'   => (bool) ($row['used_copilot_code_review_active'] ?? false),
+            'used_code_review_passive'  => (bool) ($row['used_copilot_code_review_passive'] ?? false),
+
+            'adoption_phase_number' => isset($phase['phase_number']) ? (int) $phase['phase_number'] : null,
+            'adoption_phase'        => isset($phase['phase']) ? (string) $phase['phase'] : null,
+
+            'cli_session_count'  => (int) ($cli['session_count'] ?? 0),
+            'cli_request_count'  => (int) ($cli['request_count'] ?? 0),
+            'cli_prompt_count'   => (int) ($cli['prompt_count'] ?? 0),
+            'cli_output_tokens'  => (int) ($tokenUsage['output_tokens_sum'] ?? 0),
+            'cli_prompt_tokens'  => (int) ($tokenUsage['prompt_tokens_sum'] ?? 0),
+        ];
+    }
+
+    /**
+     * Accumulate code metrics grouped by a dimension (language|editor|model|feature).
+     *
+     * Source arrays per dimension (one source to avoid double-counting):
+     *   editor   → totals_by_ide           (key: ide)
+     *   language → totals_by_language_feature (key: language)
+     *   model    → totals_by_language_model   (key: model)
+     *   feature  → totals_by_feature          (key: feature)
      *
      * @return array<string, array{
      *     total_code_suggestions: int, total_code_acceptances: int,
@@ -83,15 +116,26 @@ class UsageMetricsParser
      */
     public function breakdownItems(array $row, string $dimension): array
     {
+        [$sourceKey, $groupField] = match ($dimension) {
+            'editor'  => ['totals_by_ide', 'ide'],
+            'model'   => ['totals_by_language_model', 'model'],
+            'feature' => ['totals_by_feature', 'feature'],
+            default   => ['totals_by_language_feature', 'language'],
+        };
+
+        $source = $row[$sourceKey] ?? [];
+        if (! is_array($source)) {
+            return [];
+        }
+
         $totals = [];
 
-        foreach ($this->codeLeaves($row) as $leaf) {
-            $key = match ($dimension) {
-                'editor'   => $leaf['editor'],
-                'model'    => $leaf['model'],
-                'language' => $leaf['language'],
-                default    => $leaf['language'],
-            };
+        foreach ($source as $el) {
+            if (! is_array($el)) {
+                continue;
+            }
+
+            $key = (string) ($el[$groupField] ?? 'unknown');
 
             if (! isset($totals[$key])) {
                 $totals[$key] = [
@@ -102,91 +146,17 @@ class UsageMetricsParser
                 ];
             }
 
-            $totals[$key]['total_code_suggestions']     += $this->metric($leaf, 'total_code_suggestions', 'code_suggestions', 'suggestions');
-            $totals[$key]['total_code_acceptances']     += $this->metric($leaf, 'total_code_acceptances', 'code_acceptances', 'acceptances');
-            $totals[$key]['total_code_lines_suggested'] += $this->metric($leaf, 'total_code_lines_suggested', 'total_lines_suggested', 'lines_suggested');
-            $totals[$key]['total_code_lines_accepted']  += $this->metric($leaf, 'total_code_lines_accepted', 'total_lines_accepted', 'lines_accepted');
+            $this->sumInto($totals[$key], $el);
         }
 
         return $totals;
     }
 
-    /**
-     * Walk copilot_ide_code_completions.editors[].models[].languages[], yielding
-     * each language leaf annotated with its editor/model/language names.
-     *
-     * @return iterable<array<string, mixed>>
-     */
-    private function codeLeaves(array $row): iterable
+    private function sumInto(array &$bucket, array $el): void
     {
-        $editors = $row['copilot_ide_code_completions']['editors'] ?? [];
-        if (! is_array($editors)) {
-            return;
-        }
-
-        foreach ($editors as $editor) {
-            if (! is_array($editor)) {
-                continue;
-            }
-            $editorName = $editor['name'] ?? 'unknown';
-
-            foreach (($editor['models'] ?? []) as $model) {
-                if (! is_array($model)) {
-                    continue;
-                }
-                $modelName = $model['name'] ?? 'unknown';
-
-                foreach (($model['languages'] ?? []) as $language) {
-                    if (! is_array($language)) {
-                        continue;
-                    }
-
-                    yield $language + [
-                        'editor'   => $editorName,
-                        'model'    => $modelName,
-                        'language' => $language['name'] ?? 'unknown',
-                    ];
-                }
-            }
-        }
-    }
-
-    /**
-     * Walk copilot_ide_chat.editors[].models[], yielding each model leaf.
-     *
-     * @return iterable<array<string, mixed>>
-     */
-    private function chatLeaves(array $row): iterable
-    {
-        $editors = $row['copilot_ide_chat']['editors'] ?? [];
-        if (! is_array($editors)) {
-            return;
-        }
-
-        foreach ($editors as $editor) {
-            if (! is_array($editor)) {
-                continue;
-            }
-
-            foreach (($editor['models'] ?? []) as $model) {
-                if (is_array($model)) {
-                    yield $model;
-                }
-            }
-        }
-    }
-
-    /**
-     * Read the first present key from a leaf and cast to int.
-     */
-    private function metric(array $leaf, string ...$keys): int
-    {
-        foreach ($keys as $key) {
-            if (isset($leaf[$key])) {
-                return (int) $leaf[$key];
-            }
-        }
-
-        return 0;
+        $bucket['total_code_suggestions']     += (int) ($el['code_generation_activity_count'] ?? 0);
+        $bucket['total_code_acceptances']     += (int) ($el['code_acceptance_activity_count'] ?? 0);
+        $bucket['total_code_lines_suggested'] += (int) ($el['loc_suggested_to_add_sum'] ?? 0);
+        $bucket['total_code_lines_accepted']  += (int) ($el['loc_added_sum'] ?? 0);
     }
 }

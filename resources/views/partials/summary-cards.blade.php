@@ -29,8 +29,8 @@
     </div>
 
     <div class="stat-card">
-        <div class="label">Chat interactions</div>
-        <div class="value" style="color: var(--purple)">{{ number_format($summary['chat_interactions']) }}</div>
+        <div class="label">Interactions</div>
+        <div class="value" style="color: var(--purple)">{{ number_format($summary['user_initiated_interactions'] ?? $summary['chat_interactions']) }}</div>
         <div class="sub">&nbsp;</div>
     </div>
 

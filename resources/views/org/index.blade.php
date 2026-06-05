@@ -53,6 +53,18 @@
 </div>
 @endif
 
+@if(isset($byFeature) && count($byFeature) > 0)
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">By feature — org-wide (lines accepted)</div>
+    <div class="card-body chart-wrap">
+        @php
+            $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
+        @endphp
+        {!! \Noeka\Svgraph\Chart::bar($featureData)->axes()->grid() !!}
+    </div>
+</div>
+@endif
+
 <div class="card">
     <div class="card-header">Member leaderboard</div>
     <div class="card-body" style="padding:0;">
