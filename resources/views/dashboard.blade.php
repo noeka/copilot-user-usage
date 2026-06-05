@@ -24,6 +24,7 @@
 @else
     @include('partials.summary-cards')
     @include('partials.trend-chart')
+    @include('partials.token-usage')
     @include('partials.breakdown-charts')
 @endif
 @endsection

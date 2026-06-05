@@ -16,16 +16,18 @@
         <div class="value" style="color:var(--green)">{{ $summary['active_users'] }}</div>
     </div>
     <div class="stat-card">
-        <div class="label">Lines accepted</div>
+        <div class="label">Interactions</div>
+        <div class="value" style="color:var(--purple)">{{ number_format($summary['user_initiated_interactions'] ?? $summary['chat_interactions']) }}</div>
+        <div class="sub">user-initiated requests</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Lines added</div>
         <div class="value">{{ number_format($summary['lines_accepted']) }}</div>
+        <div class="sub">{{ number_format($summary['lines_deleted'] ?? 0) }} removed</div>
     </div>
     <div class="stat-card">
-        <div class="label">Acceptance rate</div>
-        <div class="value" style="color:var(--accent)">{{ $summary['acceptance_rate'] }}%</div>
-    </div>
-    <div class="stat-card">
-        <div class="label">Chat interactions</div>
-        <div class="value" style="color:var(--purple)">{{ number_format($summary['chat_interactions']) }}</div>
+        <div class="label">Code generations</div>
+        <div class="value" style="color:var(--accent)">{{ number_format($summary['code_suggestions']) }}</div>
     </div>
 </div>
 
@@ -36,34 +38,53 @@
         @php
             $trendData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $timeSeries);
         @endphp
-        {!! \Noeka\Svgraph\Chart::bar($trendData)->axes()->grid() !!}
+        {!! \Noeka\Svgraph\Chart::bar($trendData)->theme($chartTheme)->color('#3fb950')->axes()->grid() !!}
     </div>
 </div>
 @endif
 
-@if(count($byLanguage) > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-header">Top languages (org-wide)</div>
-    <div class="card-body chart-wrap">
-        @php
-            $langData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byLanguage);
-        @endphp
-        {!! \Noeka\Svgraph\Chart::bar($langData)->axes()->grid() !!}
-    </div>
-</div>
-@endif
+@include('partials.token-usage')
 
-@if(isset($byFeature) && count($byFeature) > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-header">By feature — org-wide (lines accepted)</div>
-    <div class="card-body chart-wrap">
-        @php
-            $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
-        @endphp
-        {!! \Noeka\Svgraph\Chart::bar($featureData)->axes()->grid() !!}
+<div class="charts-grid" style="margin-bottom:24px;">
+    @if(count($byLanguage) > 0)
+    <div class="card">
+        <div class="card-header">Top languages (org-wide)</div>
+        <div class="card-body chart-wrap">
+            @php
+                $langData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byLanguage);
+            @endphp
+            {!! \Noeka\Svgraph\Chart::bar($langData)->theme($chartTheme)->axes()->grid() !!}
+        </div>
     </div>
+    @endif
+
+    @php
+        $modelData = array_values(array_filter(
+            array_map(fn($r) => [$r['label'], $r['interactions']], $byModel ?? []),
+            fn($r) => $r[1] > 0
+        ));
+    @endphp
+    @if(count($modelData) > 0)
+    <div class="card">
+        <div class="card-header">By model — org-wide (interactions)</div>
+        <div class="card-body chart-wrap">
+            {!! \Noeka\Svgraph\Chart::bar($modelData)->theme($chartTheme)->rainbow()->horizontal()->axes()->grid() !!}
+        </div>
+    </div>
+    @endif
+
+    @if(isset($byFeature) && count($byFeature) > 0)
+    <div class="card">
+        <div class="card-header">By feature — org-wide (lines accepted)</div>
+        <div class="card-body chart-wrap">
+            @php
+                $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
+            @endphp
+            {!! \Noeka\Svgraph\Chart::bar($featureData)->theme($chartTheme)->axes()->grid() !!}
+        </div>
+    </div>
+    @endif
 </div>
-@endif
 
 <div class="card">
     <div class="card-header">Member leaderboard</div>
@@ -74,10 +95,9 @@
                 <tr>
                     <th>#</th>
                     <th>Member</th>
-                    <th>Lines accepted</th>
-                    <th>Suggestions</th>
-                    <th>Acceptance</th>
-                    <th>Chat</th>
+                    <th>Interactions</th>
+                    <th>Lines added</th>
+                    <th>Generations</th>
                     <th>Active days</th>
                     <th></th>
                 </tr>
@@ -92,14 +112,9 @@
                         @endif
                         {{ $row['user']?->github_login ?? '—' }}
                     </td>
-                    <td><strong>{{ number_format($row['lines_accepted']) }}</strong></td>
+                    <td><strong>{{ number_format($row['chat']) }}</strong></td>
+                    <td>{{ number_format($row['lines_accepted']) }}</td>
                     <td>{{ number_format($row['suggestions']) }}</td>
-                    <td>
-                        <span class="badge {{ $row['acceptance_rate'] >= 30 ? 'badge-green' : 'badge-blue' }}">
-                            {{ $row['acceptance_rate'] }}%
-                        </span>
-                    </td>
-                    <td>{{ number_format($row['chat']) }}</td>
                     <td>{{ $row['active_days'] }}</td>
                     <td>
                         @if($row['user'])

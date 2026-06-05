@@ -16,20 +16,22 @@ class MemberController extends Controller
         $copilotUser = CopilotUser::where('github_login', $login)->firstOrFail();
         $period = Period::fromRequest($request->query('period'));
 
-        $summary    = $this->report->summary($copilotUser, $period);
+        $summary = $this->report->summary($copilotUser, $period);
         $timeSeries = $this->report->timeSeries($copilotUser, $period);
         $byLanguage = $this->report->breakdown($copilotUser, 'language', $period);
-        $byEditor   = $this->report->breakdown($copilotUser, 'editor', $period);
-        $byFeature  = $this->report->breakdown($copilotUser, 'feature', $period);
+        $byEditor = $this->report->breakdown($copilotUser, 'editor', $period);
+        $byFeature = $this->report->breakdown($copilotUser, 'feature', $period);
+        $byModel = $this->report->breakdown($copilotUser, 'model', $period);
 
         return view('org.member', [
-            'period'      => $period,
+            'period' => $period,
             'copilotUser' => $copilotUser,
-            'summary'     => $summary,
-            'timeSeries'  => $timeSeries,
-            'byLanguage'  => $byLanguage,
-            'byEditor'    => $byEditor,
-            'byFeature'   => $byFeature,
+            'summary' => $summary,
+            'timeSeries' => $timeSeries,
+            'byLanguage' => $byLanguage,
+            'byEditor' => $byEditor,
+            'byFeature' => $byFeature,
+            'byModel' => $byModel,
         ]);
     }
 }
