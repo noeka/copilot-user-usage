@@ -95,8 +95,8 @@
                 <tr>
                     <th>#</th>
                     <th>Member</th>
-                    <th>Lines added</th>
                     <th>Interactions</th>
+                    <th>Lines added</th>
                     <th>Generations</th>
                     <th>Active days</th>
                     <th></th>
@@ -112,8 +112,8 @@
                         @endif
                         {{ $row['user']?->github_login ?? '—' }}
                     </td>
-                    <td><strong>{{ number_format($row['lines_accepted']) }}</strong></td>
-                    <td>{{ number_format($row['chat']) }}</td>
+                    <td><strong>{{ number_format($row['chat']) }}</strong></td>
+                    <td>{{ number_format($row['lines_accepted']) }}</td>
                     <td>{{ number_format($row['suggestions']) }}</td>
                     <td>{{ $row['active_days'] }}</td>
                     <td>

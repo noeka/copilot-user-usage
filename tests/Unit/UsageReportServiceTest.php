@@ -179,19 +179,20 @@ class UsageReportServiceTest extends TestCase
         $this->assertEquals(42, $summary['lines_accepted']);
     }
 
-    public function test_leaderboard_orders_by_lines_accepted(): void
+    public function test_leaderboard_orders_by_interactions(): void
     {
         Carbon::setTestNow('2025-11-15');
 
         $alice = $this->seedUser('alice');
         $bob = $this->seedUser('bob');
 
-        $this->seedUsage($alice, '2025-11-01', ['lines_accepted' => 10]);
-        $this->seedUsage($bob, '2025-11-01', ['lines_accepted' => 99]);
+        // Bob adds more lines, but Alice has more interactions — engagement wins.
+        $this->seedUsage($alice, '2025-11-01', ['lines_accepted' => 10, 'chat_interactions' => 80]);
+        $this->seedUsage($bob, '2025-11-01', ['lines_accepted' => 99, 'chat_interactions' => 5]);
 
         $board = $this->service->leaderboard(Period::Month);
 
-        $this->assertEquals('bob', $board[0]['user']->github_login);
-        $this->assertEquals('alice', $board[1]['user']->github_login);
+        $this->assertEquals('alice', $board[0]['user']->github_login);
+        $this->assertEquals('bob', $board[1]['user']->github_login);
     }
 }

@@ -170,7 +170,7 @@ class UsageReportService
     }
 
     /**
-     * Per-member totals sorted by lines_accepted (admin leaderboard).
+     * Per-member totals sorted by engagement (user-initiated interactions).
      */
     public function leaderboard(Period $period): array
     {
@@ -189,7 +189,7 @@ class UsageReportService
                  COUNT(DISTINCT usage_date) as active_days'
             )
             ->groupBy('copilot_user_id')
-            ->orderByDesc('lines_accepted')
+            ->orderByRaw('SUM(chat_interactions) DESC')
             ->get()
             ->map(fn ($row) => [
                 'user' => $row->copilotUser,
