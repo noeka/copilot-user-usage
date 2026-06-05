@@ -15,12 +15,15 @@
     </div>
 
     <div class="card">
-        <div class="card-header">By model (lines accepted)</div>
+        <div class="card-header">By model (interactions)</div>
         <div class="card-body chart-wrap">
-            @if(isset($byModel) && count($byModel) > 0)
-                @php
-                    $modelData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byModel);
-                @endphp
+            @php
+                $modelData = array_values(array_filter(
+                    array_map(fn($r) => [$r['label'], $r['interactions']], $byModel ?? []),
+                    fn($r) => $r[1] > 0
+                ));
+            @endphp
+            @if(count($modelData) > 0)
                 {!! \Noeka\Svgraph\Chart::bar($modelData)->theme($chartTheme)->rainbow()->horizontal()->axes()->grid() !!}
             @else
                 <div class="empty-state"><p>No model data yet.</p></div>

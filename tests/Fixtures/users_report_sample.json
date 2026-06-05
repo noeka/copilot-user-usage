@@ -1,0 +1,145 @@
+[
+  {
+    "user_id": 1001,
+    "user_login": "dev-one",
+    "day": "2026-06-04",
+    "organization_id": "10000001",
+    "enterprise_id": "",
+    "user_initiated_interaction_count": 67,
+    "code_generation_activity_count": 55,
+    "code_acceptance_activity_count": 0,
+    "totals_by_ide": [
+      {
+        "ide": "vscode",
+        "user_initiated_interaction_count": 67,
+        "code_generation_activity_count": 55,
+        "code_acceptance_activity_count": 0,
+        "loc_suggested_to_add_sum": 297,
+        "loc_suggested_to_delete_sum": 0,
+        "loc_added_sum": 473,
+        "loc_deleted_sum": 215
+      }
+    ],
+    "totals_by_language_model": [
+      { "language": "php", "model": "gpt-5.3-codex", "code_generation_activity_count": 22, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 296, "loc_deleted_sum": 194 },
+      { "language": "php", "model": "claude-4.5-haiku", "code_generation_activity_count": 13, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 221, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_model_feature": [
+      { "model": "claude-4.5-haiku", "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 15, "code_generation_activity_count": 26, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 297, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "gpt-5.3-codex", "feature": "chat_panel_agent_mode", "user_initiated_interaction_count": 26, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "gpt-5.3-codex", "feature": "agent_edit", "user_initiated_interaction_count": 0, "code_generation_activity_count": 22, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 296, "loc_deleted_sum": 194 },
+      { "model": "gpt-5.3-codex", "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 17, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "claude-4.5-haiku", "feature": "chat_panel_agent_mode", "user_initiated_interaction_count": 4, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "claude-4.6-sonnet", "feature": "chat_panel_agent_mode", "user_initiated_interaction_count": 3, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_language_feature": [
+      { "language": "php", "feature": "agent_edit", "code_generation_activity_count": 28, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 347, "loc_deleted_sum": 215 },
+      { "language": "javascript", "feature": "chat_panel_custom_mode", "code_generation_activity_count": 9, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 69, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_feature": [
+      { "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 32, "code_generation_activity_count": 26, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 297, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "feature": "agent_edit", "user_initiated_interaction_count": 0, "code_generation_activity_count": 29, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 473, "loc_deleted_sum": 215 }
+    ],
+    "used_agent": true,
+    "used_chat": true,
+    "loc_suggested_to_add_sum": 297,
+    "loc_suggested_to_delete_sum": 0,
+    "loc_added_sum": 473,
+    "loc_deleted_sum": 215,
+    "used_cli": false,
+    "used_copilot_coding_agent": false,
+    "used_copilot_cloud_agent": false,
+    "ai_adoption_phase": { "phase_number": 1, "phase": "Phase 1", "version": "v1" }
+  },
+  {
+    "user_id": 1002,
+    "user_login": "dev-cli-only",
+    "day": "2026-06-04",
+    "organization_id": "10000001",
+    "enterprise_id": "",
+    "user_initiated_interaction_count": 8,
+    "code_generation_activity_count": 0,
+    "code_acceptance_activity_count": 0,
+    "totals_by_ide": [],
+    "totals_by_feature": [
+      { "feature": "copilot_cli", "user_initiated_interaction_count": 8, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_language_feature": [
+      { "language": "others", "feature": "others", "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_language_model": [
+      { "language": "others", "model": "others", "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "totals_by_model_feature": [
+      { "model": "gpt-5.4", "feature": "copilot_cli", "user_initiated_interaction_count": 8, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "claude-haiku-4.5", "feature": "copilot_cli", "user_initiated_interaction_count": 0, "code_generation_activity_count": 0, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 }
+    ],
+    "used_agent": false,
+    "used_chat": false,
+    "loc_suggested_to_add_sum": 0,
+    "loc_suggested_to_delete_sum": 0,
+    "loc_added_sum": 0,
+    "loc_deleted_sum": 0,
+    "used_cli": true,
+    "totals_by_cli": {
+      "session_count": 1,
+      "request_count": 145,
+      "prompt_count": 8,
+      "token_usage": { "output_tokens_sum": 79480, "prompt_tokens_sum": 8424700, "avg_tokens_per_request": 58649.52 },
+      "last_known_cli_version": { "sampled_at": "2026-06-04T12:43:50.155Z", "cli_version": "1.0.59" }
+    },
+    "used_copilot_coding_agent": false,
+    "used_copilot_cloud_agent": false,
+    "ai_adoption_phase": { "phase_number": 3, "phase": "Phase 3", "version": "v1" }
+  },
+  {
+    "user_id": 1003,
+    "user_login": "dev-mixed",
+    "day": "2026-06-04",
+    "organization_id": "10000001",
+    "enterprise_id": "",
+    "user_initiated_interaction_count": 75,
+    "code_generation_activity_count": 60,
+    "code_acceptance_activity_count": 6,
+    "totals_by_ide": [
+      { "ide": "vscode", "user_initiated_interaction_count": 71, "code_generation_activity_count": 56, "code_acceptance_activity_count": 2, "loc_suggested_to_add_sum": 156, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 276, "loc_deleted_sum": 86 }
+    ],
+    "totals_by_language_model": [
+      { "language": "php", "model": "gpt-5.3-codex", "code_generation_activity_count": 11, "code_acceptance_activity_count": 4, "loc_suggested_to_add_sum": 1, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 68, "loc_deleted_sum": 72 },
+      { "language": "json", "model": "gemini-3.5-flash", "code_generation_activity_count": 13, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 30, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 109, "loc_deleted_sum": 7 }
+    ],
+    "totals_by_model_feature": [
+      { "model": "gpt-5.3-codex", "feature": "chat_panel_agent_mode", "user_initiated_interaction_count": 30, "code_generation_activity_count": 6, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 18, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "gemini-3.5-flash", "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 16, "code_generation_activity_count": 5, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 39, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "claude-4.5-haiku", "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 12, "code_generation_activity_count": 12, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 90, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "model": "gpt-5.3-codex", "feature": "copilot_cli", "user_initiated_interaction_count": 2, "code_generation_activity_count": 4, "code_acceptance_activity_count": 4, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 13, "loc_deleted_sum": 10 }
+    ],
+    "totals_by_language_feature": [
+      { "language": "json", "feature": "agent_edit", "code_generation_activity_count": 14, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 125, "loc_deleted_sum": 16 },
+      { "language": "php", "feature": "copilot_cli", "code_generation_activity_count": 4, "code_acceptance_activity_count": 4, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 13, "loc_deleted_sum": 10 }
+    ],
+    "totals_by_feature": [
+      { "feature": "chat_panel_custom_mode", "user_initiated_interaction_count": 34, "code_generation_activity_count": 17, "code_acceptance_activity_count": 0, "loc_suggested_to_add_sum": 129, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 0, "loc_deleted_sum": 0 },
+      { "feature": "copilot_cli", "user_initiated_interaction_count": 4, "code_generation_activity_count": 4, "code_acceptance_activity_count": 4, "loc_suggested_to_add_sum": 0, "loc_suggested_to_delete_sum": 0, "loc_added_sum": 13, "loc_deleted_sum": 10 }
+    ],
+    "used_agent": true,
+    "used_chat": true,
+    "loc_suggested_to_add_sum": 156,
+    "loc_suggested_to_delete_sum": 0,
+    "loc_added_sum": 289,
+    "loc_deleted_sum": 96,
+    "used_cli": true,
+    "totals_by_cli": {
+      "session_count": 3,
+      "request_count": 57,
+      "prompt_count": 4,
+      "token_usage": { "output_tokens_sum": 23268, "prompt_tokens_sum": 2175353, "avg_tokens_per_request": 38572.3 },
+      "last_known_cli_version": { "sampled_at": "2026-06-04T13:12:27.516Z", "cli_version": "1.0.55" }
+    },
+    "used_copilot_coding_agent": true,
+    "used_copilot_cloud_agent": true,
+    "used_copilot_code_review_active": true,
+    "used_copilot_code_review_passive": false,
+    "ai_adoption_phase": { "phase_number": 3, "phase": "Phase 3", "version": "v1" }
+  }
+]

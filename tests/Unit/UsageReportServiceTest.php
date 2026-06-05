@@ -148,16 +148,19 @@ class UsageReportServiceTest extends TestCase
 
         $user = $this->seedUser();
         $this->seedUsage($user, '2025-11-01', ['raw' => [
-            'totals_by_language_model' => [
-                ['model' => 'gpt-4o', 'loc_added_sum' => 120, 'code_generation_activity_count' => 30],
-                ['model' => 'claude-sonnet', 'loc_added_sum' => 50, 'code_generation_activity_count' => 12],
+            'totals_by_model_feature' => [
+                ['model' => 'gpt-4o', 'feature' => 'chat_panel_agent_mode', 'user_initiated_interaction_count' => 10, 'loc_added_sum' => 120],
+                ['model' => 'gpt-4o', 'feature' => 'copilot_cli', 'user_initiated_interaction_count' => 5, 'loc_added_sum' => 0],
+                ['model' => 'claude-sonnet', 'feature' => 'chat_panel_agent_mode', 'user_initiated_interaction_count' => 8, 'loc_added_sum' => 50],
             ],
         ]]);
 
         $breakdown = $this->service->breakdown($user, 'model', Period::Month);
 
         $this->assertCount(2, $breakdown);
+        // Ranked by interactions: gpt-4o (10 + 5 = 15) before claude-sonnet (8).
         $this->assertEquals('gpt-4o', $breakdown[0]['label']);
+        $this->assertEquals(15, $breakdown[0]['interactions']);
         $this->assertEquals(120, $breakdown[0]['lines_accepted']);
     }
 

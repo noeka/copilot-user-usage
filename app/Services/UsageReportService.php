@@ -150,16 +150,21 @@ class UsageReportService
         foreach ($usages as $usage) {
             foreach ($this->parser->breakdownItems($usage->raw ?? [], $dimension) as $key => $metrics) {
                 if (! isset($totals[$key])) {
-                    $totals[$key] = ['label' => $key, 'suggestions' => 0, 'acceptances' => 0, 'lines_suggested' => 0, 'lines_accepted' => 0];
+                    $totals[$key] = ['label' => $key, 'suggestions' => 0, 'acceptances' => 0, 'lines_suggested' => 0, 'lines_accepted' => 0, 'interactions' => 0];
                 }
                 $totals[$key]['suggestions'] += $metrics['total_code_suggestions'];
                 $totals[$key]['acceptances'] += $metrics['total_code_acceptances'];
                 $totals[$key]['lines_suggested'] += $metrics['total_code_lines_suggested'];
                 $totals[$key]['lines_accepted'] += $metrics['total_code_lines_accepted'];
+                $totals[$key]['interactions'] += $metrics['total_interactions'];
             }
         }
 
-        usort($totals, fn ($a, $b) => $b['lines_accepted'] <=> $a['lines_accepted']);
+        // Models are ranked by interactions: acceptances/accepted lines are near
+        // zero for chat/agent/CLI usage, so interactions is the meaningful
+        // "how much is this model used" signal. Other dimensions rank by lines.
+        $sortKey = $dimension === 'model' ? 'interactions' : 'lines_accepted';
+        usort($totals, fn ($a, $b) => $b[$sortKey] <=> $a[$sortKey]);
 
         return array_values(array_slice($totals, 0, 10));
     }
