@@ -36,34 +36,50 @@
         @php
             $trendData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $timeSeries);
         @endphp
-        {!! \Noeka\Svgraph\Chart::bar($trendData)->axes()->grid() !!}
+        {!! \Noeka\Svgraph\Chart::bar($trendData)->theme($chartTheme)->color('#3fb950')->axes()->grid() !!}
     </div>
 </div>
 @endif
 
-@if(count($byLanguage) > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-header">Top languages (org-wide)</div>
-    <div class="card-body chart-wrap">
-        @php
-            $langData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byLanguage);
-        @endphp
-        {!! \Noeka\Svgraph\Chart::bar($langData)->axes()->grid() !!}
-    </div>
-</div>
-@endif
+@include('partials.token-usage')
 
-@if(isset($byFeature) && count($byFeature) > 0)
-<div class="card" style="margin-bottom:24px;">
-    <div class="card-header">By feature — org-wide (lines accepted)</div>
-    <div class="card-body chart-wrap">
-        @php
-            $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
-        @endphp
-        {!! \Noeka\Svgraph\Chart::bar($featureData)->axes()->grid() !!}
+<div class="charts-grid" style="margin-bottom:24px;">
+    @if(count($byLanguage) > 0)
+    <div class="card">
+        <div class="card-header">Top languages (org-wide)</div>
+        <div class="card-body chart-wrap">
+            @php
+                $langData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byLanguage);
+            @endphp
+            {!! \Noeka\Svgraph\Chart::bar($langData)->theme($chartTheme)->axes()->grid() !!}
+        </div>
     </div>
+    @endif
+
+    @if(isset($byModel) && count($byModel) > 0)
+    <div class="card">
+        <div class="card-header">By model — org-wide (lines accepted)</div>
+        <div class="card-body chart-wrap">
+            @php
+                $modelData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byModel);
+            @endphp
+            {!! \Noeka\Svgraph\Chart::bar($modelData)->theme($chartTheme)->rainbow()->horizontal()->axes()->grid() !!}
+        </div>
+    </div>
+    @endif
+
+    @if(isset($byFeature) && count($byFeature) > 0)
+    <div class="card">
+        <div class="card-header">By feature — org-wide (lines accepted)</div>
+        <div class="card-body chart-wrap">
+            @php
+                $featureData = array_map(fn($r) => [$r['label'], $r['lines_accepted']], $byFeature);
+            @endphp
+            {!! \Noeka\Svgraph\Chart::bar($featureData)->theme($chartTheme)->axes()->grid() !!}
+        </div>
+    </div>
+    @endif
 </div>
-@endif
 
 <div class="card">
     <div class="card-header">Member leaderboard</div>

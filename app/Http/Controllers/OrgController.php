@@ -14,19 +14,21 @@ class OrgController extends Controller
     {
         $period = Period::fromRequest($request->query('period'));
 
-        $summary    = $this->report->summary(null, $period);
+        $summary = $this->report->summary(null, $period);
         $timeSeries = $this->report->timeSeries(null, $period);
         $leaderboard = $this->report->leaderboard($period);
         $byLanguage = $this->report->breakdown(null, 'language', $period);
-        $byFeature  = $this->report->breakdown(null, 'feature', $period);
+        $byFeature = $this->report->breakdown(null, 'feature', $period);
+        $byModel = $this->report->breakdown(null, 'model', $period);
 
         return view('org.index', [
-            'period'      => $period,
-            'summary'     => $summary,
-            'timeSeries'  => $timeSeries,
+            'period' => $period,
+            'summary' => $summary,
+            'timeSeries' => $timeSeries,
             'leaderboard' => $leaderboard,
-            'byLanguage'  => $byLanguage,
-            'byFeature'   => $byFeature,
+            'byLanguage' => $byLanguage,
+            'byFeature' => $byFeature,
+            'byModel' => $byModel,
         ]);
     }
 }

@@ -12,7 +12,7 @@ class UsageReportService
 
     public function __construct(?UsageMetricsParser $parser = null)
     {
-        $this->parser = $parser ?? new UsageMetricsParser();
+        $this->parser = $parser ?? new UsageMetricsParser;
     }
 
     /**
@@ -24,7 +24,7 @@ class UsageReportService
         [$from, $to] = $period->dateRange();
 
         $query = DailyUsage::query()
-            ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()]);
+            ->whereBetween('usage_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
 
         if ($user !== null) {
             $query->where('copilot_user_id', $user->id);
@@ -52,27 +52,28 @@ class UsageReportService
         if ($user !== null) {
             $adoptionPhase = DailyUsage::query()
                 ->where('copilot_user_id', $user->id)
-                ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()])
+                ->whereBetween('usage_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
                 ->whereNotNull('adoption_phase')
                 ->latest('usage_date')
                 ->value('adoption_phase');
         }
 
         return [
-            'code_suggestions'             => $suggestions,
-            'code_acceptances'             => $acceptances,
-            'acceptance_rate'              => $suggestions > 0 ? round($acceptances / $suggestions * 100, 1) : 0.0,
-            'lines_suggested'              => (int) ($row->lines_suggested ?? 0),
-            'lines_accepted'               => (int) ($row->lines_accepted ?? 0),
-            'chat_interactions'            => (int) ($row->chat ?? 0),
-            'user_initiated_interactions'  => (int) ($row->interactions ?? 0),
-            'lines_deleted'                => (int) ($row->lines_deleted ?? 0),
-            'cli_requests'                 => (int) ($row->cli_requests ?? 0),
-            'cli_output_tokens'            => (int) ($row->cli_output_tokens ?? 0),
-            'cli_prompt_tokens'            => (int) ($row->cli_prompt_tokens ?? 0),
-            'active_days'                  => (int) ($row->active_days ?? 0),
-            'active_users'                 => (int) ($row->active_users ?? 0),
-            'adoption_phase'               => $adoptionPhase,
+            'code_suggestions' => $suggestions,
+            'code_acceptances' => $acceptances,
+            'acceptance_rate' => $suggestions > 0 ? round($acceptances / $suggestions * 100, 1) : 0.0,
+            'lines_suggested' => (int) ($row->lines_suggested ?? 0),
+            'lines_accepted' => (int) ($row->lines_accepted ?? 0),
+            'chat_interactions' => (int) ($row->chat ?? 0),
+            'user_initiated_interactions' => (int) ($row->interactions ?? 0),
+            'lines_deleted' => (int) ($row->lines_deleted ?? 0),
+            'cli_requests' => (int) ($row->cli_requests ?? 0),
+            'cli_output_tokens' => (int) ($row->cli_output_tokens ?? 0),
+            'cli_prompt_tokens' => (int) ($row->cli_prompt_tokens ?? 0),
+            'cli_total_tokens' => (int) ($row->cli_output_tokens ?? 0) + (int) ($row->cli_prompt_tokens ?? 0),
+            'active_days' => (int) ($row->active_days ?? 0),
+            'active_users' => (int) ($row->active_users ?? 0),
+            'adoption_phase' => $adoptionPhase,
         ];
     }
 
@@ -84,7 +85,7 @@ class UsageReportService
         [$from, $to] = $period->dateRange();
 
         $query = DailyUsage::query()
-            ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()]);
+            ->whereBetween('usage_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
 
         if ($user !== null) {
             $query->where('copilot_user_id', $user->id);
@@ -92,7 +93,7 @@ class UsageReportService
 
         $rows = $query
             ->orderBy('usage_date')
-            ->get(['usage_date', 'code_suggestions', 'code_acceptances', 'lines_accepted', 'chat_interactions']);
+            ->get(['usage_date', 'code_suggestions', 'code_acceptances', 'lines_accepted', 'chat_interactions', 'cli_prompt_tokens', 'cli_output_tokens']);
 
         // Bucket in PHP so this works on any database (MySQL/Postgres/SQLite).
         $buckets = [];
@@ -101,18 +102,24 @@ class UsageReportService
 
             if (! isset($buckets[$key])) {
                 $buckets[$key] = [
-                    'label'          => $period->bucketLabel($row->usage_date),
-                    'suggestions'    => 0,
-                    'acceptances'    => 0,
+                    'label' => $period->bucketLabel($row->usage_date),
+                    'suggestions' => 0,
+                    'acceptances' => 0,
                     'lines_accepted' => 0,
-                    'chat'           => 0,
+                    'chat' => 0,
+                    'prompt_tokens' => 0,
+                    'output_tokens' => 0,
+                    'tokens' => 0,
                 ];
             }
 
-            $buckets[$key]['suggestions']    += (int) $row->code_suggestions;
-            $buckets[$key]['acceptances']    += (int) $row->code_acceptances;
+            $buckets[$key]['suggestions'] += (int) $row->code_suggestions;
+            $buckets[$key]['acceptances'] += (int) $row->code_acceptances;
             $buckets[$key]['lines_accepted'] += (int) $row->lines_accepted;
-            $buckets[$key]['chat']           += (int) $row->chat_interactions;
+            $buckets[$key]['chat'] += (int) $row->chat_interactions;
+            $buckets[$key]['prompt_tokens'] += (int) $row->cli_prompt_tokens;
+            $buckets[$key]['output_tokens'] += (int) $row->cli_output_tokens;
+            $buckets[$key]['tokens'] += (int) $row->cli_prompt_tokens + (int) $row->cli_output_tokens;
         }
 
         ksort($buckets);
@@ -129,7 +136,7 @@ class UsageReportService
         [$from, $to] = $period->dateRange();
 
         $query = DailyUsage::query()
-            ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()]);
+            ->whereBetween('usage_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
 
         if ($user !== null) {
             $query->where('copilot_user_id', $user->id);
@@ -145,10 +152,10 @@ class UsageReportService
                 if (! isset($totals[$key])) {
                     $totals[$key] = ['label' => $key, 'suggestions' => 0, 'acceptances' => 0, 'lines_suggested' => 0, 'lines_accepted' => 0];
                 }
-                $totals[$key]['suggestions']     += $metrics['total_code_suggestions'];
-                $totals[$key]['acceptances']     += $metrics['total_code_acceptances'];
+                $totals[$key]['suggestions'] += $metrics['total_code_suggestions'];
+                $totals[$key]['acceptances'] += $metrics['total_code_acceptances'];
                 $totals[$key]['lines_suggested'] += $metrics['total_code_lines_suggested'];
-                $totals[$key]['lines_accepted']  += $metrics['total_code_lines_accepted'];
+                $totals[$key]['lines_accepted'] += $metrics['total_code_lines_accepted'];
             }
         }
 
@@ -166,7 +173,7 @@ class UsageReportService
 
         return DailyUsage::query()
             ->with('copilotUser')
-            ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('usage_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
             ->selectRaw(
                 'copilot_user_id,
                  SUM(code_suggestions)  as suggestions,
@@ -180,13 +187,13 @@ class UsageReportService
             ->orderByDesc('lines_accepted')
             ->get()
             ->map(fn ($row) => [
-                'user'           => $row->copilotUser,
-                'suggestions'    => (int) $row->suggestions,
-                'acceptances'    => (int) $row->acceptances,
+                'user' => $row->copilotUser,
+                'suggestions' => (int) $row->suggestions,
+                'acceptances' => (int) $row->acceptances,
                 'lines_suggested' => (int) $row->lines_suggested,
                 'lines_accepted' => (int) $row->lines_accepted,
-                'chat'           => (int) $row->chat,
-                'active_days'    => (int) $row->active_days,
+                'chat' => (int) $row->chat,
+                'active_days' => (int) $row->active_days,
                 'acceptance_rate' => $row->suggestions > 0 ? round($row->acceptances / $row->suggestions * 100, 1) : 0.0,
             ])
             ->toArray();

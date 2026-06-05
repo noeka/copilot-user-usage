@@ -18,20 +18,22 @@ class DashboardController extends Controller
         $githubId = $request->user()->github_id;
         $copilotUser = CopilotUser::where('github_id', $githubId)->first();
 
-        $summary    = $this->report->summary($copilotUser, $period);
+        $summary = $this->report->summary($copilotUser, $period);
         $timeSeries = $this->report->timeSeries($copilotUser, $period);
         $byLanguage = $this->report->breakdown($copilotUser, 'language', $period);
-        $byEditor   = $this->report->breakdown($copilotUser, 'editor', $period);
-        $byFeature  = $this->report->breakdown($copilotUser, 'feature', $period);
+        $byEditor = $this->report->breakdown($copilotUser, 'editor', $period);
+        $byFeature = $this->report->breakdown($copilotUser, 'feature', $period);
+        $byModel = $this->report->breakdown($copilotUser, 'model', $period);
 
         return view('dashboard', [
-            'period'      => $period,
+            'period' => $period,
             'copilotUser' => $copilotUser,
-            'summary'     => $summary,
-            'timeSeries'  => $timeSeries,
-            'byLanguage'  => $byLanguage,
-            'byEditor'    => $byEditor,
-            'byFeature'   => $byFeature,
+            'summary' => $summary,
+            'timeSeries' => $timeSeries,
+            'byLanguage' => $byLanguage,
+            'byEditor' => $byEditor,
+            'byFeature' => $byFeature,
+            'byModel' => $byModel,
         ]);
     }
 }

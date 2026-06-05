@@ -14,7 +14,7 @@
         <div class="sub">of {{ number_format($summary['lines_suggested']) }} suggested</div>
         @if(count($sparkPoints) > 1)
         <div class="sparkline">
-            {!! \Noeka\Svgraph\Chart::sparkline($sparkPoints) !!}
+            {!! \Noeka\Svgraph\Chart::sparkline($sparkPoints)->theme($chartTheme)->stroke('#3fb950') !!}
         </div>
         @endif
     </div>
