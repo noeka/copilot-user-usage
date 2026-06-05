@@ -7,6 +7,7 @@ use App\Http\Controllers\OrgController;
 use Illuminate\Support\Facades\Route;
 
 // Auth
+Route::get('/login', [GithubLoginController::class, 'showLogin'])->name('login');
 Route::get('/auth/github', [GithubLoginController::class, 'redirect'])->name('auth.github');
 Route::get('/auth/github/callback', [GithubLoginController::class, 'callback'])->name('auth.github.callback');
 Route::post('/auth/logout', [GithubLoginController::class, 'logout'])->name('auth.logout');

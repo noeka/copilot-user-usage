@@ -5,13 +5,32 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Github\CopilotMetricsClient;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
 class GithubLoginController extends Controller
 {
-    public function redirect()
+    public function showLogin()
     {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('auth.login');
+    }
+
+    public function redirect(Request $request)
+    {
+        // An explicit sign-in clears the manual-logout flag.
+        $request->session()->forget('logged_out');
+
+        // In non-production the DevAutoLogin middleware authenticates the dev user,
+        // so we can skip the OAuth round-trip entirely.
+        if (! app()->environment('production') && config('copilot.dev_login')) {
+            return redirect()->route('dashboard');
+        }
+
         return Socialite::driver('github')
             ->scopes(['read:org'])
             ->redirect();
@@ -25,7 +44,7 @@ class GithubLoginController extends Controller
         $role = $client->orgMembership($socialUser->token);
 
         if ($role === null) {
-            return redirect()->route('auth.github')
+            return redirect()->route('login')
                 ->withErrors(['github' => 'You must be an active member of the organisation to access this dashboard.']);
         }
 
@@ -48,10 +67,16 @@ class GithubLoginController extends Controller
         return redirect()->intended(route('dashboard'));
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         Auth::logout();
 
-        return redirect()->route('auth.github');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        // Mark this as an explicit logout so DevAutoLogin does not re-authenticate.
+        $request->session()->put('logged_out', true);
+
+        return redirect()->route('login');
     }
 }

@@ -91,13 +91,14 @@ class SyncCopilotUsage extends Command
         );
 
         $metrics = $parser->summarize($row);
+        $extras  = $parser->extras($row);
 
         DailyUsage::updateOrCreate(
             [
                 'copilot_user_id' => $copilotUser->id,
                 'usage_date'      => $day->toDateString(),
             ],
-            $metrics + ['raw' => $row]
+            $metrics + $extras + ['raw' => $row]
         );
     }
 }

@@ -21,9 +21,18 @@ class AuthorizationTest extends TestCase
         ]);
     }
 
-    public function test_unauthenticated_redirects_to_github_login(): void
+    public function test_unauthenticated_redirects_to_login(): void
     {
-        $this->get('/')->assertRedirect(route('auth.github'));
+        $this->get('/')->assertRedirect(route('login'));
+    }
+
+    public function test_logout_signs_user_out_and_redirects_to_login(): void
+    {
+        $this->actingAs($this->makeUser())
+            ->post(route('auth.logout'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
     }
 
     public function test_regular_user_sees_dashboard(): void

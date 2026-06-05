@@ -20,6 +20,7 @@ class MemberController extends Controller
         $timeSeries = $this->report->timeSeries($copilotUser, $period);
         $byLanguage = $this->report->breakdown($copilotUser, 'language', $period);
         $byEditor   = $this->report->breakdown($copilotUser, 'editor', $period);
+        $byFeature  = $this->report->breakdown($copilotUser, 'feature', $period);
 
         return view('org.member', [
             'period'      => $period,
@@ -28,6 +29,7 @@ class MemberController extends Controller
             'timeSeries'  => $timeSeries,
             'byLanguage'  => $byLanguage,
             'byEditor'    => $byEditor,
+            'byFeature'   => $byFeature,
         ]);
     }
 }

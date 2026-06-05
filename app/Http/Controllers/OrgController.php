@@ -18,6 +18,7 @@ class OrgController extends Controller
         $timeSeries = $this->report->timeSeries(null, $period);
         $leaderboard = $this->report->leaderboard($period);
         $byLanguage = $this->report->breakdown(null, 'language', $period);
+        $byFeature  = $this->report->breakdown(null, 'feature', $period);
 
         return view('org.index', [
             'period'      => $period,
@@ -25,6 +26,7 @@ class OrgController extends Controller
             'timeSeries'  => $timeSeries,
             'leaderboard' => $leaderboard,
             'byLanguage'  => $byLanguage,
+            'byFeature'   => $byFeature,
         ]);
     }
 }

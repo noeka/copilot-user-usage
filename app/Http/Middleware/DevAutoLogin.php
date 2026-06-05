@@ -14,6 +14,7 @@ class DevAutoLogin
     {
         if (! app()->environment('production')
             && ! Auth::check()
+            && ! $request->session()->get('logged_out')
             && ($login = config('copilot.dev_login'))) {
             $user = User::where('github_login', $login)->first();
 

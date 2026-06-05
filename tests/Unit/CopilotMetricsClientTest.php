@@ -22,8 +22,8 @@ class CopilotMetricsClientTest extends TestCase
         config(['copilot.org' => 'test-org']);
 
         $ndjson = implode("\n", [
-            json_encode(['user_id' => '1', 'user_login' => 'alice', 'copilot_ide_code_completions' => ['editors' => []]]),
-            json_encode(['user_id' => '2', 'user_login' => 'bob',   'copilot_ide_code_completions' => ['editors' => []]]),
+            json_encode(['user_id' => '1', 'user_login' => 'alice', 'code_generation_activity_count' => 10, 'loc_added_sum' => 5]),
+            json_encode(['user_id' => '2', 'user_login' => 'bob',   'code_generation_activity_count' => 0,  'loc_added_sum' => 0]),
         ]);
 
         Http::fake([

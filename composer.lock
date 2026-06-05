@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8b8eb07177e53beb24c57e29d382aae8",
+    "content-hash": "8234a2d33f8ce2b9176b9985c32955d3",
     "packages": [
         {
             "name": "brick/math",
@@ -2668,16 +2668,16 @@
         },
         {
             "name": "noeka/svgraph",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/noeka/svgraph.git",
-                "reference": "33eb38d5078cd9ada8c0daee7427b7ea82e6c318"
+                "reference": "d19c5e2235ecb57e0ed2a834d90f67c013dfd4c9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/noeka/svgraph/zipball/33eb38d5078cd9ada8c0daee7427b7ea82e6c318",
-                "reference": "33eb38d5078cd9ada8c0daee7427b7ea82e6c318",
+                "url": "https://api.github.com/repos/noeka/svgraph/zipball/d19c5e2235ecb57e0ed2a834d90f67c013dfd4c9",
+                "reference": "d19c5e2235ecb57e0ed2a834d90f67c013dfd4c9",
                 "shasum": ""
             },
             "require": {
@@ -2711,9 +2711,9 @@
             "description": "JavaScript-free SVG chart rendering for PHP. Sparkline, line/area, bar, pie/donut, and progress charts as static markup.",
             "support": {
                 "issues": "https://github.com/noeka/svgraph/issues",
-                "source": "https://github.com/noeka/svgraph/tree/0.3.0"
+                "source": "https://github.com/noeka/svgraph/tree/0.4.0"
             },
-            "time": "2026-05-14T19:50:59+00:00"
+            "time": "2026-06-04T18:36:43+00:00"
         },
         {
             "name": "nunomaduro/termwind",

@@ -8,52 +8,109 @@ use Tests\TestCase;
 class UsageMetricsParserTest extends TestCase
 {
     /**
-     * A representative nested users-1-day record: two languages across two
-     * editors, with one language (python) appearing under both editors so we
-     * can assert the parser accumulates rather than overwrites.
+     * A representative flat users-1-day record with two languages appearing
+     * under multiple features (so we can assert the parser accumulates).
      */
     private function sampleRow(): array
     {
         return [
-            'date'       => '2026-06-03',
+            'day'        => '2026-06-04',
             'user_login' => 'alice',
             'user_id'    => 123,
-            'copilot_ide_code_completions' => [
-                'editors' => [
-                    [
-                        'name'   => 'vscode',
-                        'models' => [
-                            [
-                                'name'      => 'default',
-                                'languages' => [
-                                    ['name' => 'python', 'total_code_suggestions' => 100, 'total_code_acceptances' => 40, 'total_code_lines_suggested' => 200, 'total_code_lines_accepted' => 80],
-                                    ['name' => 'php',    'total_code_suggestions' => 30,  'total_code_acceptances' => 10, 'total_code_lines_suggested' => 60,  'total_code_lines_accepted' => 25],
-                                ],
-                            ],
-                        ],
-                    ],
-                    [
-                        'name'   => 'neovim',
-                        'models' => [
-                            [
-                                'name'      => 'default',
-                                'languages' => [
-                                    ['name' => 'python', 'total_code_suggestions' => 20, 'total_code_acceptances' => 5, 'total_code_lines_suggested' => 40, 'total_code_lines_accepted' => 15],
-                                ],
-                            ],
-                        ],
-                    ],
+
+            'user_initiated_interaction_count' => 10,
+            'code_generation_activity_count'   => 150,
+            'code_acceptance_activity_count'   => 55,
+            'loc_suggested_to_add_sum'         => 300,
+            'loc_suggested_to_delete_sum'      => 5,
+            'loc_added_sum'                    => 120,
+            'loc_deleted_sum'                  => 40,
+
+            'used_agent'               => true,
+            'used_chat'                => true,
+            'used_cli'                 => false,
+            'used_copilot_coding_agent' => false,
+            'used_copilot_cloud_agent'  => false,
+
+            'ai_adoption_phase' => [
+                'phase_number' => 2,
+                'phase'        => 'Phase 2',
+                'version'      => 'v1',
+            ],
+
+            'totals_by_ide' => [
+                [
+                    'ide'                              => 'vscode',
+                    'code_generation_activity_count'   => 130,
+                    'code_acceptance_activity_count'   => 55,
+                    'loc_suggested_to_add_sum'         => 300,
+                    'loc_suggested_to_delete_sum'      => 0,
+                    'loc_added_sum'                    => 120,
+                    'loc_deleted_sum'                  => 40,
+                ],
+                [
+                    'ide'                              => 'neovim',
+                    'code_generation_activity_count'   => 20,
+                    'code_acceptance_activity_count'   => 0,
+                    'loc_suggested_to_add_sum'         => 0,
+                    'loc_suggested_to_delete_sum'      => 5,
+                    'loc_added_sum'                    => 0,
+                    'loc_deleted_sum'                  => 0,
                 ],
             ],
-            'copilot_ide_chat' => [
-                'editors' => [
-                    [
-                        'name'   => 'vscode',
-                        'models' => [
-                            ['name' => 'default', 'total_chats' => 7],
-                            ['name' => 'gpt-4o',  'total_chats' => 3],
-                        ],
-                    ],
+
+            'totals_by_feature' => [
+                [
+                    'feature'                          => 'chat_panel_custom_mode',
+                    'code_generation_activity_count'   => 100,
+                    'code_acceptance_activity_count'   => 0,
+                    'loc_suggested_to_add_sum'         => 300,
+                    'loc_suggested_to_delete_sum'      => 0,
+                    'loc_added_sum'                    => 0,
+                    'loc_deleted_sum'                  => 0,
+                ],
+                [
+                    'feature'                          => 'agent_edit',
+                    'code_generation_activity_count'   => 50,
+                    'code_acceptance_activity_count'   => 55,
+                    'loc_suggested_to_add_sum'         => 0,
+                    'loc_suggested_to_delete_sum'      => 5,
+                    'loc_added_sum'                    => 120,
+                    'loc_deleted_sum'                  => 40,
+                ],
+            ],
+
+            // python appears under two features (accumulation test)
+            'totals_by_language_feature' => [
+                [
+                    'language'                         => 'python',
+                    'feature'                          => 'chat_panel_custom_mode',
+                    'code_generation_activity_count'   => 80,
+                    'code_acceptance_activity_count'   => 0,
+                    'loc_suggested_to_add_sum'         => 200,
+                    'loc_suggested_to_delete_sum'      => 0,
+                    'loc_added_sum'                    => 0,
+                    'loc_deleted_sum'                  => 0,
+                ],
+                [
+                    'language'                         => 'python',
+                    'feature'                          => 'agent_edit',
+                    'code_generation_activity_count'   => 40,
+                    'code_acceptance_activity_count'   => 0,
+                    'loc_suggested_to_add_sum'         => 0,
+                    'loc_suggested_to_delete_sum'      => 0,
+                    'loc_added_sum'                    => 95,
+                    'loc_deleted_sum'                  => 40,
+                ],
+                [
+                    'language'                         => 'php',
+                    'feature'                          => 'agent_edit',
+                    'code_generation_activity_count'   => 30,
+                    'code_acceptance_activity_count'   => 55,
+                    'loc_suggested_to_add_sum'         => 100,
+                    'loc_suggested_to_delete_sum'      => 0,
+                    'loc_added_sum'                    => 25,
+                    'loc_deleted_sum'                  => 0,
                 ],
             ],
         ];
@@ -75,20 +132,15 @@ class UsageMetricsParserTest extends TestCase
         $this->assertSame('bob', $identity['github_login']);
     }
 
-    public function test_summarize_sums_nested_code_and_chat_metrics(): void
+    public function test_summarize_reads_flat_top_level_metrics(): void
     {
         $summary = (new UsageMetricsParser())->summarize($this->sampleRow());
 
-        // suggestions: 100 + 30 + 20
         $this->assertSame(150, $summary['code_suggestions']);
-        // acceptances: 40 + 10 + 5
-        $this->assertSame(55, $summary['code_acceptances']);
-        // lines suggested: 200 + 60 + 40
+        $this->assertSame(55,  $summary['code_acceptances']);
         $this->assertSame(300, $summary['lines_suggested']);
-        // lines accepted: 80 + 25 + 15
         $this->assertSame(120, $summary['lines_accepted']);
-        // chats: 7 + 3
-        $this->assertSame(10, $summary['chat_interactions']);
+        $this->assertSame(10,  $summary['chat_interactions']);
         $this->assertTrue($summary['engaged']);
     }
 
@@ -101,21 +153,78 @@ class UsageMetricsParserTest extends TestCase
         $this->assertFalse($summary['engaged']);
     }
 
-    public function test_breakdown_by_language_accumulates_across_editors(): void
+    public function test_breakdown_by_language_accumulates_across_features(): void
     {
         $items = (new UsageMetricsParser())->breakdownItems($this->sampleRow(), 'language');
 
-        // python appears under both vscode and neovim: 100+20 suggestions, 80+15 lines accepted
+        // python appears under two features: 80+40 suggestions, 0+95 lines accepted
         $this->assertSame(120, $items['python']['total_code_suggestions']);
-        $this->assertSame(95, $items['python']['total_code_lines_accepted']);
-        $this->assertSame(30, $items['php']['total_code_suggestions']);
+        $this->assertSame(95,  $items['python']['total_code_lines_accepted']);
+        $this->assertSame(30,  $items['php']['total_code_suggestions']);
     }
 
     public function test_breakdown_by_editor(): void
     {
         $items = (new UsageMetricsParser())->breakdownItems($this->sampleRow(), 'editor');
 
-        $this->assertSame(130, $items['vscode']['total_code_suggestions']); // 100 + 30
-        $this->assertSame(20, $items['neovim']['total_code_suggestions']);
+        $this->assertSame(130, $items['vscode']['total_code_suggestions']);
+        $this->assertSame(20,  $items['neovim']['total_code_suggestions']);
+        $this->assertSame(120, $items['vscode']['total_code_lines_accepted']);
+    }
+
+    public function test_breakdown_by_feature(): void
+    {
+        $items = (new UsageMetricsParser())->breakdownItems($this->sampleRow(), 'feature');
+
+        $this->assertSame(100, $items['chat_panel_custom_mode']['total_code_suggestions']);
+        $this->assertSame(50,  $items['agent_edit']['total_code_suggestions']);
+        $this->assertSame(120, $items['agent_edit']['total_code_lines_accepted']);
+    }
+
+    public function test_extras_reads_extended_fields(): void
+    {
+        $row = $this->sampleRow();
+        $row['totals_by_cli'] = [
+            'session_count' => 2,
+            'request_count' => 50,
+            'prompt_count'  => 5,
+            'token_usage'   => [
+                'output_tokens_sum' => 10000,
+                'prompt_tokens_sum' => 500000,
+            ],
+        ];
+
+        $extras = (new UsageMetricsParser())->extras($row);
+
+        $this->assertSame(10,    $extras['user_initiated_interactions']);
+        $this->assertSame(40,    $extras['lines_deleted']);
+        $this->assertTrue($extras['used_agent']);
+        $this->assertTrue($extras['used_chat']);
+        $this->assertFalse($extras['used_cli']);
+        $this->assertFalse($extras['used_code_review_active']);
+        $this->assertSame(2,     $extras['adoption_phase_number']);
+        $this->assertSame('Phase 2', $extras['adoption_phase']);
+        $this->assertSame(2,     $extras['cli_session_count']);
+        $this->assertSame(10000, $extras['cli_output_tokens']);
+        $this->assertSame(500000, $extras['cli_prompt_tokens']);
+    }
+
+    public function test_extras_returns_cli_zeros_when_no_cli(): void
+    {
+        $extras = (new UsageMetricsParser())->extras(['user_login' => 'idle']);
+
+        $this->assertSame(0, $extras['cli_session_count']);
+        $this->assertSame(0, $extras['cli_output_tokens']);
+        $this->assertFalse($extras['used_code_review_active']);
+        $this->assertFalse($extras['used_code_review_passive']);
+        $this->assertNull($extras['adoption_phase']);
+        $this->assertNull($extras['adoption_phase_number']);
+    }
+
+    public function test_breakdown_returns_empty_for_missing_source(): void
+    {
+        $items = (new UsageMetricsParser())->breakdownItems(['user_login' => 'idle'], 'language');
+
+        $this->assertSame([], $items);
     }
 }

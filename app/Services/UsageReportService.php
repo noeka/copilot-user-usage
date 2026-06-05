@@ -36,6 +36,11 @@ class UsageReportService
              SUM(lines_suggested)  as lines_suggested,
              SUM(lines_accepted)   as lines_accepted,
              SUM(chat_interactions) as chat,
+             SUM(user_initiated_interactions) as interactions,
+             SUM(lines_deleted) as lines_deleted,
+             SUM(cli_request_count) as cli_requests,
+             SUM(cli_output_tokens) as cli_output_tokens,
+             SUM(cli_prompt_tokens) as cli_prompt_tokens,
              COUNT(DISTINCT usage_date) as active_days,
              COUNT(DISTINCT copilot_user_id) as active_users'
         )->first();
@@ -43,15 +48,31 @@ class UsageReportService
         $suggestions = (int) ($row->suggestions ?? 0);
         $acceptances = (int) ($row->acceptances ?? 0);
 
+        $adoptionPhase = null;
+        if ($user !== null) {
+            $adoptionPhase = DailyUsage::query()
+                ->where('copilot_user_id', $user->id)
+                ->whereBetween('usage_date', [$from->toDateString(), $to->toDateString()])
+                ->whereNotNull('adoption_phase')
+                ->latest('usage_date')
+                ->value('adoption_phase');
+        }
+
         return [
-            'code_suggestions'  => $suggestions,
-            'code_acceptances'  => $acceptances,
-            'acceptance_rate'   => $suggestions > 0 ? round($acceptances / $suggestions * 100, 1) : 0.0,
-            'lines_suggested'   => (int) ($row->lines_suggested ?? 0),
-            'lines_accepted'    => (int) ($row->lines_accepted ?? 0),
-            'chat_interactions' => (int) ($row->chat ?? 0),
-            'active_days'       => (int) ($row->active_days ?? 0),
-            'active_users'      => (int) ($row->active_users ?? 0),
+            'code_suggestions'             => $suggestions,
+            'code_acceptances'             => $acceptances,
+            'acceptance_rate'              => $suggestions > 0 ? round($acceptances / $suggestions * 100, 1) : 0.0,
+            'lines_suggested'              => (int) ($row->lines_suggested ?? 0),
+            'lines_accepted'               => (int) ($row->lines_accepted ?? 0),
+            'chat_interactions'            => (int) ($row->chat ?? 0),
+            'user_initiated_interactions'  => (int) ($row->interactions ?? 0),
+            'lines_deleted'                => (int) ($row->lines_deleted ?? 0),
+            'cli_requests'                 => (int) ($row->cli_requests ?? 0),
+            'cli_output_tokens'            => (int) ($row->cli_output_tokens ?? 0),
+            'cli_prompt_tokens'            => (int) ($row->cli_prompt_tokens ?? 0),
+            'active_days'                  => (int) ($row->active_days ?? 0),
+            'active_users'                 => (int) ($row->active_users ?? 0),
+            'adoption_phase'               => $adoptionPhase,
         ];
     }
 
